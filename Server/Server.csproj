@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>DistributedRendering.AME.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+        <AssemblyName>DistributedRendering.AME.$(MSBuildProjectName)</AssemblyName>
+
+        <Version>0.4.3</Version>
+        <Authors>Dominik Lambrich</Authors>
+        <Company>Hochschule Flensburg</Company>
+        <Description>A distributed rendering application for Adobe Premiere Pro projects.</Description>
+        <RepositoryUrl>https://gitlab.hs-flensburg.de/dola4404/thesis</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FFMpegCore" Version="5.4.0"/>
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0"/>
+        <PackageReference Include="SQLite" Version="3.13.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0"/>
+
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.0.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.0.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.0.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Data\"/>
+        <Folder Include="logs\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Shared\Shared.csproj"/>
+    </ItemGroup>
+
+</Project>
