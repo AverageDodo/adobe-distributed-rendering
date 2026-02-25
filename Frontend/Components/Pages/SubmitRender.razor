@@ -1,0 +1,54 @@
+﻿@page "/SubmitRender"
+@using System.Text.Json
+@using Frontend.Services
+@rendermode InteractiveServer
+@inject ILogger<SubmitRender> Logger
+@inject IHubCommunicationService CommunicationService
+
+<PageTitle>Submit Render Job</PageTitle>
+
+<h3>Submit Render Job</h3>
+
+<form method="post" @onsubmit="OnSubmitAsync">
+    <div class="form-wrapper-grid">
+        <label class="input-label" for="project-path">
+            Project Path:
+        </label>
+        <InputText class="input-text-field" id="project-path" required @bind-Value="ProjectPath"/>
+        <label class="input-label" for="timeline-length">
+            Timeline Length:
+        </label>
+        <InputText class="input-text-field" id="timeline-length" required autocomplete="off"
+                   @bind-Value="TimelineLengthStr"/>
+        <label class="input-label" for="fragment-length">
+            Fragment Length:
+        </label>
+        <InputText class="input-text-field" id="fragment-length" autocomplete="off" @bind-Value="FragmentLengthStr"/>
+        <button class="submit-button" type="submit">Submit</button>
+    </div>
+</form>
+
+@code {
+    private string ProjectPath { get; set; } = "";
+
+    private string TimelineLengthStr { get; set; } = "";
+    private TimeSpan TimelineLength => TimeSpan.TryParse(TimelineLengthStr, out TimeSpan span) ? span : TimeSpan.Zero;
+
+    private string FragmentLengthStr { get; set; } = "";
+    private TimeSpan FragmentLength => TimeSpan.TryParse(FragmentLengthStr, out TimeSpan span) ? span : TimeSpan.Zero;
+
+    private async Task OnSubmitAsync()
+    {
+        Logger.LogInformation("Project Path: {Path}", ProjectPath);
+        Logger.LogInformation("Timeline Length: {TimelineLength}", TimelineLength.ToString("g"));
+        Logger.LogInformation("Fragment Length: {FragmentLength}", FragmentLength.ToString("g"));
+
+        object? response = await CommunicationService.SubmitRenderJobAsync(ProjectPath, TimelineLength, FragmentLength);
+
+        if (response is null)
+            return;
+
+        Logger.LogInformation("Response received: \n{Response}", JsonSerializer.Serialize(response));
+    }
+
+}
