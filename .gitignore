@@ -483,6 +483,37 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+# Blazor
+
+# Specific to the EFCore-Blazor sample app
+*.db
+*.db-shm
+*.db-wal
+
+_build/
+_site/
+
+# Publish Web Output
+*.[Pp]ublish.xml
+*.azurePubxml
+# TODO: Comment the next line if you want to checkin your web deploy settings 
+# but database connection strings (with potential passwords) will be unencrypted
+*.pubxml
+*.publishproj
+
+*.[Cc]ache
+ClientBin/
+[Ss]tyle[Cc]op.*
+~$*
+*~
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+node_modules/
+bower_components/
+blazor-samples/
+
 # Custom
 **/Client/files/generated/*.js
 
