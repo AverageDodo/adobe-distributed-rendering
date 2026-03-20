@@ -1,22 +1,21 @@
 ﻿using System.Text;
+using System.Text.Json;
 
-using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
-using Microsoft.Extensions.Options;
+using DistributedRendering.AME.Frontend.Lib;
+using DistributedRendering.AME.Frontend.Lib.Configuration;
 
-using HttpMethod = System.Net.Http.HttpMethod;
+namespace DistributedRendering.AME.Frontend.Services;
 
-namespace Frontend.Services;
-
-public interface IHubCommunicationService : IAsyncDisposable
+public interface IHubCommunicationService : IDisposable
 {
-	Task<object?> SubmitRenderJobAsync(
+	Task<IHubResponse<TResponse>> SubmitRenderJobAsync<TResponse>(
 		string projectPath,
 		TimeSpan timelineLength,
 		TimeSpan fragmentDuration,
 		CancellationToken token = default
 	);
 
-	Task<object?> GetStatisticsAsync(Guid requestGuid, CancellationToken token = default);
+	Task<IHubResponse<TResponse>> GetStatisticsAsync<TResponse>(Guid requestGuid, CancellationToken token = default);
 }
 
 public sealed class HubCommunicationService(
@@ -27,7 +26,7 @@ public sealed class HubCommunicationService(
 	private readonly HttpClient httpClient = new();
 	private HubCommunicationSettings Config => configurationService.HubCommunicationSettings;
 
-	public async Task<object?> SubmitRenderJobAsync(
+	public async Task<IHubResponse<TResponse>> SubmitRenderJobAsync<TResponse>(
 		string projectPath,
 		TimeSpan timelineLength,
 		TimeSpan fragmentDuration,
@@ -35,11 +34,11 @@ public sealed class HubCommunicationService(
 	)
 	{
 		using var multipartForm = new MultipartFormDataContent();
-		multipartForm.Add(new StringContent(projectPath, Encoding.UTF8), "projectPath");
-		multipartForm.Add(new StringContent(timelineLength.ToString("c"), Encoding.UTF8), "timelineLength");
-		multipartForm.Add(new StringContent(fragmentDuration.ToString("c"), Encoding.UTF8), "jobDuration");
+		multipartForm.Add(new StringContent(projectPath, Encoding.UTF8), Endpoints.c_ProjectPath);
+		multipartForm.Add(new StringContent(timelineLength.ToString("c"), Encoding.UTF8), Endpoints.c_TimelineLength);
+		multipartForm.Add(new StringContent(fragmentDuration.ToString("c"), Encoding.UTF8), Endpoints.c_FragmentDuration);
 
-		object? responseObj = null;
+		HubResponse<TResponse> responseObj = null!;
 		try
 		{
 			using HttpResponseMessage response = await httpClient.PostAsync(
@@ -48,56 +47,42 @@ public sealed class HubCommunicationService(
 				cancellationToken: token
 			);
 
+			string responseContent = await response.Content.ReadAsStringAsync(token);
+
 			if (!response.IsSuccessStatusCode)
 			{
 				logger.LogWarning(
 					"Received non-success status code from endpoint. Status code was '{Code}', message was '{Message}'.",
 					response.StatusCode,
-					await response.Content.ReadAsStringAsync(token)
+					responseContent
 				);
 			}
 			else
 			{
-				responseObj = await response.Content.ReadAsStringAsync(token);
+				var content = JsonSerializer.Deserialize<TResponse>(responseContent, SerializerOptions);
+
+				ArgumentNullException.ThrowIfNull(content, $"Failed to deserialize response object of type {typeof(TResponse)}.");
+
+				responseObj = new HubResponse<TResponse>(content);
 			}
 		}
 		catch (Exception e)
 		{
 			logger.LogError(e, "Exception caught while attempting to send new render job to Hub.");
+
+			responseObj = new HubResponse<TResponse>(e, e.Message);
 		}
 
 		return responseObj;
 	}
 
-	public async Task<object?> GetStatisticsAsync(Guid requestGuid, CancellationToken token = default)
+	public Task<IHubResponse<TResponse>> GetStatisticsAsync<TResponse>(Guid requestGuid, CancellationToken token = default)
 	{
 		throw new NotImplementedException();
 	}
 
-	public ValueTask DisposeAsync()
+	public void Dispose()
 	{
 		httpClient.Dispose();
-
-		return ValueTask.CompletedTask;
 	}
-}
-
-public sealed record HubCommunicationSettings(
-	string Scheme,
-	string Host,
-	int Port,
-	string PostRequestUriPath,
-	string GetStatisticsUriPath
-)
-{
-	private Uri BaseUri => new UriBuilder
-	{
-		Scheme = Scheme,
-		Host = Host,
-		Port = Port,
-	}.Uri;
-
-	public Uri PostRenderJobEndpoint => new UriBuilder(BaseUri) { Path = PostRequestUriPath }.Uri;
-
-	public Uri GetStatisticsEndpoint => new UriBuilder(BaseUri) { Path = GetStatisticsUriPath }.Uri;
 }

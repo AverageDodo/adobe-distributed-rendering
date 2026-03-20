@@ -1,0 +1,12 @@
+﻿@page "/plot"
+@using ScottPlot
+@using ScottPlot.Blazor
+
+@rendermode InteractiveServer
+
+<h2>Plot Testing</h2>
+
+<article id="plot">
+    <img id="plot-image" style="display: block" width="75vw" height="60vh" src="@ImageSourceUrlString" alt="Plot Image"/>
+    <button style="display: block" @onclick="OnClick">Generate Plot Image</button>
+</article>

@@ -1,13 +1,18 @@
-using Frontend.Components;
-using Frontend.Services;
+using DistributedRendering.AME.Frontend.Components;
+using DistributedRendering.AME.Frontend.Lib.Configuration;
+using DistributedRendering.AME.Frontend.Services;
 
-namespace Frontend;
+namespace DistributedRendering.AME.Frontend;
 
 public class Program
 {
 	public static void Main(string[] args)
 	{
 		WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+		builder.Services
+			.AddOptions<HubCommunicationSettings>()
+			.Bind(builder.Configuration.GetSection(nameof(HubCommunicationSettings)));
 
 		// Add services to the container.
 		builder.Services.AddRazorComponents()

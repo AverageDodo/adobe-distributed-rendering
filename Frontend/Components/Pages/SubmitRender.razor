@@ -1,5 +1,7 @@
 ﻿@page "/SubmitRender"
 @using System.Text.Json
+@using DistributedRendering.AME.Shared.Util
+@using Frontend.Lib
 @using Frontend.Services
 @rendermode InteractiveServer
 @inject ILogger<SubmitRender> Logger
@@ -9,24 +11,27 @@
 
 <h3>Submit Render Job</h3>
 
-<form method="post" @onsubmit="OnSubmitAsync">
-    <div class="form-wrapper-grid">
-        <label class="input-label" for="project-path">
-            Project Path:
-        </label>
-        <InputText class="input-text-field" id="project-path" required @bind-Value="ProjectPath"/>
-        <label class="input-label" for="timeline-length">
-            Timeline Length:
-        </label>
-        <InputText class="input-text-field" id="timeline-length" required autocomplete="off"
-                   @bind-Value="TimelineLengthStr"/>
-        <label class="input-label" for="fragment-length">
-            Fragment Length:
-        </label>
-        <InputText class="input-text-field" id="fragment-length" autocomplete="off" @bind-Value="FragmentLengthStr"/>
-        <button class="submit-button" type="submit">Submit</button>
-    </div>
-</form>
+<article id="submit-form">
+    <form method="post" @onsubmit="OnSubmitAsync">
+        <div class="form-wrapper-grid">
+            <label class="input-label" for="project-path">
+                Project Path:
+            </label>
+            <InputText class="input-text-field" id="project-path" required @bind-Value="ProjectPath"/>
+            <label class="input-label" for="timeline-length">
+                Timeline Length:
+            </label>
+            <InputText class="input-text-field" id="timeline-length" required autocomplete="off"
+                       @bind-Value="TimelineLengthStr"/>
+            <label class="input-label" for="fragment-length">
+                Fragment Length:
+            </label>
+            <InputText class="input-text-field" id="fragment-length" autocomplete="off"
+                       @bind-Value="FragmentLengthStr"/>
+            <button class="submit-button" type="submit">Submit</button>
+        </div>
+    </form>
+</article>
 
 @code {
     private string ProjectPath { get; set; } = "";
@@ -43,12 +48,12 @@
         Logger.LogInformation("Timeline Length: {TimelineLength}", TimelineLength.ToString("g"));
         Logger.LogInformation("Fragment Length: {FragmentLength}", FragmentLength.ToString("g"));
 
-        object? response = await CommunicationService.SubmitRenderJobAsync(ProjectPath, TimelineLength, FragmentLength);
+        IHubResponse<object> response = await CommunicationService.SubmitRenderJobAsync<object>(ProjectPath, TimelineLength, FragmentLength);
 
-        if (response is null)
+        if (!response.WasSuccess)
             return;
 
-        Logger.LogInformation("Response received: \n{Response}", JsonSerializer.Serialize(response));
+        Logger.LogInformation("Response received: \n{Response}", JsonSerializer.Serialize(response.Response, SerializerOptions));
     }
 
 }
